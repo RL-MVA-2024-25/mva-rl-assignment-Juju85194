@@ -36,7 +36,7 @@ class ProjectAgent:
         self.model.to(self.device)
         self.target_model = deepcopy(self.model).to(self.device)
         self.target_model.eval()
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
+        self.optimizer = optim.AdamW(self.model.parameters(), lr=self.config['learning_rate'], amsgrad=True)
         self.memory = PrioritizedReplayBuffer(self.config['buffer_size'], self.config['prioritized_replay_alpha'], self.device)
         self.epsilon_max = self.config['epsilon_max']
         self.epsilon_min = self.config['epsilon_min']
@@ -162,11 +162,11 @@ class ProjectAgent:
 class DqnAgent(nn.Module):
     def __init__(self):
         super(DqnAgent, self).__init__()
-        self.fc1 = nn.Linear(6, 256)
-        self.fc2 = nn.Linear(256, 128)
-        self.fc3 = nn.Linear(128, 64)
+        self.fc1 = nn.Linear(6, 512)
+        self.fc2 = nn.Linear(512, 256)
+        self.fc3 = nn.Linear(256, 128)
         self.relu = nn.ReLU()
-        self.fc4 = nn.Linear(64, 4)
+        self.fc4 = nn.Linear(128, 4)
 
     def forward(self, x):
         x = self.relu(self.fc1(x))
@@ -221,19 +221,6 @@ class PrioritizedReplayBuffer:
 
     def __len__(self):
         return len(self.buffer)
-
-
-def seed_everything(seed: int = 42):
-    random.seed(seed)
-    os.environ["PYTHONHASHSEED"] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-    torch.cuda.manual_seed_all(seed)
-
-seed_everything(seed=42)
     
 env = TimeLimit(
 env=HIVPatient(domain_randomization=False), max_episode_steps=200
@@ -243,12 +230,12 @@ if __name__ == "__main__":
     config = {'nb_actions': env.action_space.n,
                 'learning_rate': 0.001,
                 'gamma': 0.90,
-                'buffer_size': 20000,
+                'buffer_size': 40000,
                 'epsilon_min': 0.05,
                 'epsilon_max': 1.0,
-                'epsilon_decay_period': 70000,
-                'epsilon_delay_decay': 2000,
-                'batch_size': 200,
+                'epsilon_decay_period': 40000,
+                'epsilon_delay_decay': 200,
+                'batch_size': 1000,
                 'gradient_steps': 2,
                 'update_target_strategy': 'ema',
                 'update_target_freq': 60,
