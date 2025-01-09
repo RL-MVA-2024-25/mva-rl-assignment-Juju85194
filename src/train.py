@@ -247,4 +247,4 @@ if __name__ == "__main__":
             }
     
     agent = ProjectAgent(config, DqnAgent())
-    episode_return = agent.train(env, 400)
+    episode_return = agent.train(env, 500)
